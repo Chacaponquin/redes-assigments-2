@@ -34,67 +34,47 @@ while True:
    if len(filename) > 0 and filename[-1] == '/':
        filename = filename[:-1]
 
-   file_exist = False
-
-   try:
-       f = open(filename, "r", encoding='utf-8')
-       file_exist = True
-
-       output_data = f.readlines()
-
-       tcp_cli_sock.send("HTTP/1.0 200 OK\r\n".encode())
-       tcp_cli_sock.send("Content-Type:text/html\r\n".encode())
-
-       for out in output_data:
-           tcp_cli_sock.send(out.encode())
+   if filename in cache:
+       # tcp_cli_sock.send("HTTP/1.0 200 OK\r\n".encode())
+       # tcp_cli_sock.send("Content-Type:text/html\r\n".encode())
+       for head in cache[filename]:
+           tcp_cli_sock.send(head)
 
        print('Read from cache')
-       print()
-   except IOError:
-       if not file_exist:
-           sock = socket(AF_INET, SOCK_STREAM)
-           hostn = filename.replace("www.", "", 1)
+   else:
+       sock = socket(AF_INET, SOCK_STREAM)
+       hostn = filename.replace("www.", "", 1)
 
-           server_name = filename.partition("/")[0]
-           ask_file = 'http://' + server_name if ''.join(filename.partition('/')[1:]) == '' else ''.join(
-               filename.partition('/')[1:])
+       server_name = filename.partition("/")[0]
+       ask_file = 'http://' + server_name if ''.join(filename.partition('/')[1:]) == '' else ''.join(
+           filename.partition('/')[1:])
 
-           try:
-               sock.connect((server_name, 80))
-               file_obj = sock.makefile('rwb', None)
-               header = "GET " + ask_file + " HTTP/1.1\r\nHost: " + server_name + '\r\n\r\n'
-               file_obj.write(header.encode())
-               file_obj.flush()
+       try:
+           sock.connect((server_name, 80))
+           file_obj = sock.makefile('rwb', None)
+           header = "GET " + ask_file + " HTTP/1.1\r\nHost: " + server_name + '\r\n\r\n'
+           file_obj.write(header.encode())
+           file_obj.flush()
 
-               headers = file_obj.readlines()
+           headers = file_obj.readlines()
 
-               status_line = headers[0].decode()
-               status_code = int(status_line.split()[1])
+           status_line = headers[0].decode()
+           status_code = int(status_line.split()[1])
 
-               if status_code == '404':
-                   print('404')
-                   tcp_cli_sock.send("HTTP/1.1 404 Not Found\r\n\r\n".encode())
-                   tcp_cli_sock.close()
-                   continue
-               else:
-                   for head in headers:
-                      tcp_cli_sock.send(head)
+           if status_code == '404':
+               print('404')
+               tcp_cli_sock.send("HTTP/1.1 404 Not Found\r\n\r\n".encode())
+               tcp_cli_sock.close()
+               continue
+           else:
+               for head in headers:
+                  tcp_cli_sock.send(head)
 
-                   tmp_file = open("./" + filename, "wb")
+               # save in cache
+               cache[filename] = headers
+       except:
+           print("Illegal request")
 
-                   content = "".join([str(head) for head in headers])
-                   tmp_file.write(content.encode())
-                   tmp_file.close()
-
-                   # save in cache
-                   cache[filename] = content
-           except:
-               print("Illegal request")
-       else:
-           tcp_cli_sock.send("HTTP/1.0 404 NOT FOUND\r\n".encode())
-           tcp_cli_sock.send("Content-Type:text/html\r\n".encode())
-           tcp_cli_sock.send("<html><head><title>Not Found</title></head><body><h1>Not Found</h1></body></html>".encode())
-   finally:
        print()
 
    tcp_cli_sock.close()
