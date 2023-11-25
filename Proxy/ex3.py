@@ -35,8 +35,6 @@ while True:
        filename = filename[:-1]
 
    if filename in cache:
-       # tcp_cli_sock.send("HTTP/1.0 200 OK\r\n".encode())
-       # tcp_cli_sock.send("Content-Type:text/html\r\n".encode())
        for head in cache[filename]:
            tcp_cli_sock.send(head)
 
@@ -75,6 +73,6 @@ while True:
        except:
            print("Illegal request")
 
-       print()
+   print()
 
    tcp_cli_sock.close()
