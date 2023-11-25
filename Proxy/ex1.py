@@ -2,6 +2,7 @@ from socket import *
 import sys
 
 # Example: python ex1.py localhost
+# Example URL: http://localhost:8080/www.cubadebate.cu
 if len(sys.argv) <= 1:
    print('Usage : "python proxy.py server_ip"\n[server_ip : It is the IP Address Of Proxy Server]\n')
    sys.exit(2)
@@ -9,7 +10,7 @@ if len(sys.argv) <= 1:
 IP = sys.argv[1]
 
 tcp_ser_sock = socket(AF_INET, SOCK_STREAM)
-tcp_ser_sock.bind((IP, 8088))
+tcp_ser_sock.bind((IP, 8080))
 tcp_ser_sock.listen(5)
 
 while True:

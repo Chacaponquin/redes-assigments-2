@@ -6,6 +6,7 @@ import sys
 cache = {}
 
 # Example: python ex3.py localhost
+# Example URL: http://localhost:8080/www.cubadebate.cu
 if len(sys.argv) <= 1:
    print('Usage : "python proxy.py server_ip"\n[server_ip : It is the IP Address Of Proxy Server]\n')
    sys.exit(2)
